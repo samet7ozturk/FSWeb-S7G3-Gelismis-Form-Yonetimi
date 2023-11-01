@@ -22,6 +22,23 @@ function CreateForm(formData = emptyForm) {
     password: "",
     checkbox: "",
   });
+
+  const [kullanicilar, setKullanicilar] = useState([]);
+
+  const fetchData = async () => {
+    try {
+      const response = await axios.get("https://reqres.in/api/users");
+      setKullanicilar(response.data.data);
+    } catch (error) {
+      console.error("Veri alınırken bir hata oluştu: ", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+    console.log("Use Effect");
+  }, [data]);
+
   //   const [name, setName] = useState("");
   //   const [surname, setSurname] = useState("");
   //   const [email, setEmail] = useState("");
@@ -63,15 +80,15 @@ function CreateForm(formData = emptyForm) {
       checkValidationFor(key, data[key]);
     }
 
-    if (formValid) {
+    if (!formValid) {
       console.log("FORM SUBMIT EDİLDİ! ", e);
 
       const endpoint = "https://reqres.in/api/users";
 
       axios
-        .post(endpoint, data)
+        .post(endpoint)
         .then((res) => {
-          console.log("ürün başarıyla kaydedildi!");
+          console.log("ürün başarıyla kaydedildi!", res);
         })
         .catch((err) => {
           console.error("Ürün kaydedilirken bir hata ile karşılaşıldı: ", err);
@@ -98,7 +115,6 @@ function CreateForm(formData = emptyForm) {
   const { name, surname, email, password, checkbox } = data;
 
   useEffect(() => {
-    console.log("product > ", data);
     dataFormSchema.isValid(data).then((valid) => setFormValid(valid));
   }, [data]);
 
@@ -184,6 +200,12 @@ function CreateForm(formData = emptyForm) {
           Submit
         </Button>
       </Form>
+      <div>
+        <h>Kullanıcılar</h>
+        {kullanicilar.map((user, ind) => (
+          <pre key={ind}>{JSON.stringify(user, null, 2)}</pre>
+        ))}
+      </div>
     </>
   );
 }
