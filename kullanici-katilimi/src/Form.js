@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Form, Button } from "react-bootstrap";
+import { Form, Button, Alert } from "react-bootstrap";
 import axios from "axios";
 import "bootstrap/dist/css/bootstrap.min.css";
 import * as Yup from "yup";
@@ -22,28 +22,15 @@ function CreateForm(formData = emptyForm) {
     password: "",
     checkbox: "",
   });
-
-  const [kullanicilar, setKullanicilar] = useState([]);
-
-  const fetchData = async () => {
-    try {
-      const response = await axios.get("https://reqres.in/api/users");
-      setKullanicilar(response.data.data);
-    } catch (error) {
-      console.error("Veri alınırken bir hata oluştu: ", error);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-    console.log("Use Effect");
-  }, [data]);
+  const [submissionSuccess, setSubmissionSuccess] = useState(false);
+  const [users, setUsers] = useState([]);
 
   //   const [name, setName] = useState("");
   //   const [surname, setSurname] = useState("");
   //   const [email, setEmail] = useState("");
   //   const [password, setPassword] = useState("");
   //   const [checkbox, setcheckbox] = useState("");
+  const { name, surname, email, password, checkbox } = data;
 
   const dataFormSchema = Yup.object().shape({
     name: Yup.string()
@@ -71,27 +58,47 @@ function CreateForm(formData = emptyForm) {
     checkValidationFor(name, type === "checkbox" ? checked : value);
   };
 
+  useEffect(() => {
+    axios
+      .get("https://reqres.in/api/users")
+      .then((response) => {
+        setUsers(response.data.data);
+      })
+      .catch((error) => console.error("API error:", error));
+  }, []);
+
   const submitForm = (e) => {
     e.preventDefault();
-    console.log("Form Data: ", data);
-
     for (let key in data) {
-      console.log("checkValidationFor(key, data[key]) > ", key, data[key]);
       checkValidationFor(key, data[key]);
     }
 
-    if (!formValid) {
-      console.log("FORM SUBMIT EDİLDİ! ", e);
-
+    if (formValid) {
       const endpoint = "https://reqres.in/api/users";
 
       axios
-        .post(endpoint)
+        .post(endpoint, data)
         .then((res) => {
-          console.log("ürün başarıyla kaydedildi!", res);
+          const newUser = {
+            ...res.data,
+            first_name: res.data.firstName,
+            last_name: res.data.lastName,
+            email: res.data.email,
+          };
+          setSubmissionSuccess(true);
+          setTimeout(() => setSubmissionSuccess(false), 5000);
+          setUsers((prevUsers) => [...prevUsers, newUser]);
+          setData(emptyForm);
+          setFormErrors({
+            firstName: "",
+            lastName: "",
+            email: "",
+            password: "",
+            checkbox: "",
+          });
         })
         .catch((err) => {
-          console.error("Ürün kaydedilirken bir hata ile karşılaşıldı: ", err);
+          console.error("POST error!", err);
         });
     }
   };
@@ -111,8 +118,6 @@ function CreateForm(formData = emptyForm) {
         }));
       });
   };
-
-  const { name, surname, email, password, checkbox } = data;
 
   useEffect(() => {
     dataFormSchema.isValid(data).then((valid) => setFormValid(valid));
@@ -196,16 +201,22 @@ function CreateForm(formData = emptyForm) {
           />
         </Form.Group>
 
-        <Button variant="secondary" type="submit">
+        <Button variant="primary" type="submit">
           Submit
         </Button>
+        {submissionSuccess && (
+          <Alert variant="success">Form successfully submitted!</Alert>
+        )}
+
+        <h4>Users:</h4>
+        <ol>
+          {users.map((user) => (
+            <li key={user.id}>
+              {user.first_name} - {user.email}
+            </li>
+          ))}
+        </ol>
       </Form>
-      <div>
-        <h>Kullanıcılar</h>
-        {kullanicilar.map((user, ind) => (
-          <pre key={ind}>{JSON.stringify(user, null, 2)}</pre>
-        ))}
-      </div>
     </>
   );
 }
