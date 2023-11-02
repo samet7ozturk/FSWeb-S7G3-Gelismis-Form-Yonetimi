@@ -81,8 +81,8 @@ function CreateForm(formData = emptyForm) {
         .then((res) => {
           const newUser = {
             ...res.data,
-            first_name: res.data.firstName,
-            last_name: res.data.lastName,
+            name: res.data.name,
+            surname: res.data.surname,
             email: res.data.email,
           };
           setSubmissionSuccess(true);
@@ -90,8 +90,8 @@ function CreateForm(formData = emptyForm) {
           setUsers((prevUsers) => [...prevUsers, newUser]);
           setData(emptyForm);
           setFormErrors({
-            firstName: "",
-            lastName: "",
+            name: "",
+            surname: "",
             email: "",
             password: "",
             checkbox: "",
@@ -212,7 +212,7 @@ function CreateForm(formData = emptyForm) {
         <ol>
           {users.map((user) => (
             <li key={user.id}>
-              {user.first_name} - {user.email}
+              {user.name} - {user.email}
             </li>
           ))}
         </ol>
